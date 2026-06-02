@@ -211,6 +211,7 @@ bool faceHasGold(int cubeFace, int goldMask) {
 void solve(int sr, int sc, int R, int C, int A, int B, uint64_t initialBoardMask) {
 
     unordered_map<Estado, int, PairHash> dist;
+
     priority_queue<PQEntry, vector<PQEntry>, greater<PQEntry>> pq;
 
     int oriInicial = orientationIndex[0][4][3];
@@ -243,9 +244,9 @@ void solve(int sr, int sc, int R, int C, int A, int B, uint64_t initialBoardMask
         }
 
         Estado claveActual = make_pair(estado1, estado2);
-        if (!found && dist.count(claveActual) && dist[claveActual] < cost) {
 
-        } else if (!found) {
+        if (!found && dist[claveActual] == cost) 
+        {
             int d = 0;
             while (d < 4) {
                 int nr = er + DR[d];
@@ -279,7 +280,9 @@ void solve(int sr, int sc, int R, int C, int A, int B, uint64_t initialBoardMask
                     int newEstado1 = encodeState1(nr, nc, newOri, newGoldFaces);
                     Estado nuevaClave = make_pair(newEstado1, newBoardMask);
 
-                    if (!dist.count(nuevaClave) || newCost < dist[nuevaClave]) {
+                    unordered_map<Estado, int, PairHash>::iterator it = dist.find(nuevaClave);
+
+                    if (it == dist.end() || newCost < it->second) {
                         dist[nuevaClave] = newCost;
                         pq.push(make_tuple(newCost, newEstado1, newBoardMask));
                     }
