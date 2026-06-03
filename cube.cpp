@@ -1,251 +1,144 @@
-
 /*
     cube.cpp
     Yura Hernandez - Juan Jose Bolivar
 
-        Operaciones con bits:
-        Prender:
-                mask |= (1 << pos_bit_a_encender)
-        Apagar:
-                mask &= ~(1 << pos_bit_a_apagar)
-        Verificar:
-                mask & (1 << pos_bit_a_verificar)
+    Operaciones con bits:
+        Prender bit:
+            mask |= (1 << pos_a_prender)
+        Apagar bit:
+            mask &= ~(1 << pos_a_apagar)
+        verificar bit:
+            mask & (1 << pos_a_verificar)
+
+    Complejidad:
+        O()
 */
 
 #include <bits/stdc++.h>
-
 using namespace std;
 
-const int DR[] = {0,1,0,-1};
-const int DC[] = {1,0,-1,0};
+const int DR[] = {0, 1, 0, -1};
+const int DC[] = {1, 0, -1, 0};
 
-array<int,3> cubeOrientations[24];
-int orientationIndex[6][6][6];
-int moveResult[24][4];
+// Direcciones usadas en DR/DC
+const int EAST_DIR  = 0;
+const int SOUTH_DIR = 1;
+const int WEST_DIR  = 2;
+const int NORTH_DIR = 3;
 
+// Posiciones relativas de las caras del cubo
+const int DOWN  = 0;
+const int SOUTH = 1;
+const int EAST  = 2;
+const int NORTH = 3;
+const int WEST  = 4;
+const int UP    = 5;
 
-// =========================== [ Cube functions ] ===========================
+uint64_t cellBit[8][8];
 
-/*
-    bottom, south,  east
-    {1,     5,        4}
-    {6,     2         3}
-
-
-    moveSouth() {
-        Original: {1,     5,      4}
-        Aux:      {6,     2       3}
-        ++++++++++++++++++++++++++++
-        Original: {5,     6,      4}
-        Aux:      {2,     1,      3}
-        ++++++++++++++++++++++++++++
-        Original: {6,     2,      4}
-        Aux:      {1,     5,      4}
-        ++++++++++++++++++++++++++++
-        Original: {2,     1,      4}
-        Aux:      {5,     6,      4}
-        ++++++++++++++++++++++++++++
-        Original: {1,     5,      4}
-        Aux:      {6,     2,      4}
-    }
-
-    moveNorth() {
-        Original: {1,     5,      4}
-        Aux:      {6,     2       3}
-        ++++++++++++++++++++++++++++
-        Original: {2,     1,      4}
-        Aux:      {5,     6,      3}
-        ++++++++++++++++++++++++++++
-        Original: {6,     2,      4}
-        Aux:      {1,     5,      4}
-        ++++++++++++++++++++++++++++
-        Original: {5,     6,      4}
-        Aux:      {2,     1,      4}
-        ++++++++++++++++++++++++++++
-        Original: {1,     5,      4}
-        Aux:      {6,     2,      4}
-    }
-
-
-    moveEast() {
-        Original: {1,     5,      3}
-        Aux:      {6,     2       4}
-        ++++++++++++++++++++++++++++
-        Original: {3,     5,      6}
-        Aux:      {4,     2,      1}
-        ++++++++++++++++++++++++++++
-        Original: {6,     5,      4}
-        Aux:      {1,     2,      3}
-        ++++++++++++++++++++++++++++
-        Original: {4,     5,      1}
-        Aux:      {3,     2,      6}
-        ++++++++++++++++++++++++++++
-        Original: {1,     5,      3}
-        Aux:      {6,     2,      4}
-    }
-
-    moveWeast() {
-        Original: {1,     5,      3}
-        Aux:      {6,     2       4}
-        ++++++++++++++++++++++++++++
-        Original: {4,     5,      1}
-        Aux:      {3,     2,      6}
-        ++++++++++++++++++++++++++++
-        Original: {6,     5,      4}
-        Aux:      {1,     2,      3}
-        ++++++++++++++++++++++++++++
-        Original: {3,     5,      6}
-        Aux:      {4,     2,      1}
-        ++++++++++++++++++++++++++++
-        Original: {1,     5,      3}
-        Aux:      {6,     2,      4}
-    }
-
-*/
-
-
-
-const int INVERSE[6] = {5,4,3,2,1,0};
-
-void moveSouth(array<int,3> &cube) {
-    int tmp = INVERSE[cube[0]];
-    cube[0] = cube[1];
-    cube[1] = tmp;
-}
-void moveNorth(array<int,3> &cube) {
-    int tmp = INVERSE[cube[1]];
-    cube[1] = cube[0];
-    cube[0] = tmp;
-}
-void moveEast(array<int,3> &cube) {
-    int tmp = INVERSE[cube[0]];
-    cube[0] = cube[2];
-    cube[2] = tmp;
-}
-void moveWeast(array<int,3> &cube) {
-    int tmp = INVERSE[cube[2]];
-    cube[2] = cube[0];
-    cube[0] = tmp;
+bool bit(int mask, int p) {
+    return (mask & (1 << p)) != 0;
 }
 
-void precomputeCubeOrientations() {
-    memset(orientationIndex, -1, sizeof(orientationIndex));
-    int count = 0;
-
-    queue<array<int,3>> q;
-    array<int,3> inicial = {0, 4, 3};
-    q.push(inicial);
-    orientationIndex[0][4][3] = count;
-    cubeOrientations[count++] = inicial;
-
-    while (!q.empty()) {
-        array<int,3> cur = q.front();
-        q.pop();
-
-        array<int,3> vecinos[4] = {cur, cur, cur, cur};
-        moveEast(vecinos[0]);
-        moveSouth(vecinos[1]);
-        moveWeast(vecinos[2]);
-        moveNorth(vecinos[3]);
-
-        int i = 0;
-        while (i < 4) {
-            auto &v = vecinos[i];
-            if (orientationIndex[v[0]][v[1]][v[2]] == -1) {
-                orientationIndex[v[0]][v[1]][v[2]] = count;
-                cubeOrientations[count++] = v;
-                q.push(v);
-            }
-            i++;
-        }
-    }
-
-    int ori = 0;
-    while (ori < 24) {
-        array<int,3> dirs[4] = {
-            cubeOrientations[ori],
-            cubeOrientations[ori],
-            cubeOrientations[ori],
-            cubeOrientations[ori]
-        };
-        moveEast(dirs[0]);
-        moveSouth(dirs[1]);
-        moveWeast(dirs[2]);
-        moveNorth(dirs[3]);
-
-        int d = 0;
-        while (d < 4) {
-            moveResult[ori][d] = orientationIndex[dirs[d][0]][dirs[d][1]][dirs[d][2]];
-            d++;
-        }
-        ori++;
-    }
+void setBit(int &mask, int pos, bool val) {
+    if (val)
+        mask |= (1 << pos);
+    else
+        mask &= ~(1 << pos);
 }
 
-int encodeState1(int r, int c, int ori, int goldFaces) {
-    return r | (c << 3) | (ori << 6) | (goldFaces << 11);
+int rotateMask(int mask, int d) {
+    int nm = mask;
+
+    if (d == EAST_DIR) {
+        setBit(nm, DOWN, bit(mask, WEST));
+        setBit(nm, EAST, bit(mask, DOWN));
+        setBit(nm, UP,   bit(mask, EAST));
+        setBit(nm, WEST, bit(mask, UP));
+    }
+    else if (d == WEST_DIR) {
+        setBit(nm, DOWN, bit(mask, EAST));
+        setBit(nm, WEST, bit(mask, DOWN));
+        setBit(nm, UP,   bit(mask, WEST));
+        setBit(nm, EAST, bit(mask, UP));
+    }
+    else if (d == SOUTH_DIR) {
+        setBit(nm, DOWN,  bit(mask, NORTH));
+        setBit(nm, SOUTH, bit(mask, DOWN));
+        setBit(nm, UP,    bit(mask, SOUTH));
+        setBit(nm, NORTH, bit(mask, UP));
+    }
+    else {
+        setBit(nm, DOWN,  bit(mask, SOUTH));
+        setBit(nm, NORTH, bit(mask, DOWN));
+        setBit(nm, UP,    bit(mask, NORTH));
+        setBit(nm, SOUTH, bit(mask, UP));
+    }
+
+    return nm;
+}
+
+int encodeState1(int r, int c, int goldFaces) {
+    return r | (c << 3) | (goldFaces << 6);
 }
 
 struct PairHash {
-    size_t operator()(const pair<int,uint64_t> &p) const {
+    size_t operator()(const pair<int, uint64_t> &p) const {
         size_t h1 = hash<int>()(p.first);
         size_t h2 = hash<uint64_t>()(p.second);
         return h1 ^ (h2 * 1000000007ULL);
     }
 };
 
-typedef pair<int,uint64_t> Estado;
-typedef tuple<int,int,uint64_t> PQEntry;
+typedef pair<int, uint64_t> Estado;
+typedef tuple<int, int, uint64_t> PQEntry;
 
-// =========================== [ END cube functions ] ===========================
-
-
-bool hasGold(uint64_t b, int r, int c) {
-    return b & (1ULL << (r*8+c));
+bool hasGold(uint64_t boardMask, int r, int c) {
+    return (boardMask & cellBit[r][c]) != 0;
 }
 
-bool faceHasGold(int cubeFace, int goldMask) {
-    return goldMask & (1 << cubeFace);
+bool faceHasGold(int face, int goldMask) {
+    return (goldMask & (1 << face)) != 0;
 }
 
 void solve(int sr, int sc, int R, int C, int A, int B, uint64_t initialBoardMask) {
-
     unordered_map<Estado, int, PairHash> dist;
 
-    priority_queue<PQEntry, vector<PQEntry>, greater<PQEntry>> pq;
+    priority_queue<PQEntry, vector<PQEntry>, greater<PQEntry> > pq;
 
-    int oriInicial = orientationIndex[0][4][3];
-    int s1 = encodeState1(sr, sc, oriInicial, 0);
-    uint64_t s2 = initialBoardMask;
+    int s1 = encodeState1(sr, sc, 0);
+    Estado estadoInicial = make_pair(s1, initialBoardMask);
 
-    Estado estadoInicial = make_pair(s1, s2);
     dist[estadoInicial] = 0;
-    pq.push(make_tuple(0, s1, s2));
+    pq.push(make_tuple(0, s1, initialBoardMask));
 
     bool found = false;
-    int ans = -1;
+    int ans = 0;
 
     while (!pq.empty() && !found) {
-
         int cost = get<0>(pq.top());
         int estado1 = get<1>(pq.top());
-        uint64_t estado2 = get<2>(pq.top());
+        uint64_t boardMask = get<2>(pq.top());
         pq.pop();
+
+        Estado claveActual = make_pair(estado1, boardMask);
+        unordered_map<Estado, int, PairHash>::iterator itActual = dist.find(claveActual);
+
+        if (itActual == dist.end() || itActual->second < cost) {
+            continue;
+        }
 
         int er = estado1 & 7;
         int ec = (estado1 >> 3) & 7;
-        int eOri = (estado1 >> 6) & 31;
-        int eGoldFaces = (estado1 >> 11) & 63;
-        uint64_t eBoardMask = estado2;
+        int goldFaces = (estado1 >> 6) & 63;
 
-        if (eBoardMask == 0) {
+        if (boardMask == 0) {
             found = true;
             ans = cost;
         }
 
-        Estado claveActual = make_pair(estado1, estado2);
 
-        if (!found && dist[claveActual] == cost) 
+        if (!found && itActual->second == cost) 
         {
             int d = 0;
             while (d < 4) {
@@ -253,38 +146,42 @@ void solve(int sr, int sc, int R, int C, int A, int B, uint64_t initialBoardMask
                 int nc = ec + DC[d];
 
                 if (nr >= 0 && nr < R && nc >= 0 && nc < C) {
-                    int newOri = moveResult[eOri][d];
-                    int newGoldFaces = eGoldFaces;
-                    uint64_t newBoardMask = eBoardMask;
+                    int newGoldFaces = rotateMask(goldFaces, d);
+                    uint64_t newBoardMask = boardMask;
                     int newCost = cost;
 
-                    int bottomFace = cubeOrientations[newOri][0];
-
                     bool cellHasGoldB = hasGold(newBoardMask, nr, nc);
-                    bool faceHasGoldB = faceHasGold(bottomFace, newGoldFaces);
+                    bool bottomHasGold = faceHasGold(DOWN, newGoldFaces);
 
-                    if (cellHasGoldB && !faceHasGoldB) {
-                        newBoardMask &= ~(1ULL << (nr*8+nc));
-                        newGoldFaces |= (1 << bottomFace);
+                    if (cellHasGoldB && !bottomHasGold) {
+                        // Recoger oro
+                        newBoardMask &= ~cellBit[nr][nc];
+                        newGoldFaces |= (1 << DOWN);
                         newCost += B;
-                    } else if (cellHasGoldB && faceHasGoldB) {
+                    }
+                    else if (cellHasGoldB && bottomHasGold) {
+                        // Hay oro en la celda y también abajo
                         newCost += A;
-                    } else if (!cellHasGoldB && faceHasGoldB) {
-                        newBoardMask |= (1ULL << (nr*8+nc));
-                        newGoldFaces &= ~(1 << bottomFace);
+                    }
+                    else if (!cellHasGoldB && bottomHasGold) {
+                        // Dejar oro: costo A
+                        newBoardMask |= cellBit[nr][nc];
+                        newGoldFaces &= ~(1 << DOWN);
                         newCost += A;
-                    } else {
+                    }
+                    else {
+                        // Celda vacía y cara abajo vacía
                         newCost += A;
                     }
 
-                    int newEstado1 = encodeState1(nr, nc, newOri, newGoldFaces);
+                    int newEstado1 = encodeState1(nr, nc, newGoldFaces);
                     Estado nuevaClave = make_pair(newEstado1, newBoardMask);
 
                     unordered_map<Estado, int, PairHash>::iterator it = dist.find(nuevaClave);
 
                     if (it == dist.end() || newCost < it->second) {
                         dist[nuevaClave] = newCost;
-                        pq.push(make_tuple(newCost, newEstado1, newBoardMask));
+                        pq.emplace(make_tuple(newCost, newEstado1, newBoardMask));
                     }
                 }
                 d++;
@@ -299,7 +196,16 @@ void solve(int sr, int sc, int R, int C, int A, int B, uint64_t initialBoardMask
 }
 
 int main() {
-    precomputeCubeOrientations();
+
+    int i = 0;
+    while (i < 8) {
+        int j = 0;
+        while (j < 8) {
+            cellBit[i][j] = 1ULL << (i * 8 + j);
+            j++;
+        }
+        i++;
+    }
 
     int T, R, C, A, B;
     cin >> T;
@@ -311,22 +217,24 @@ int main() {
 
         cin >> R >> C >> A >> B;
 
-        int i = 0;
+        i = 0;
         while (i < R) {
             int j = 0;
             while (j < C) {
                 cin >> aux0;
-                if (aux0 == 'G')
-                    boardMask |= (1ULL << (i*8+j));
+
+                if (aux0 == 'G') {
+                    boardMask |= cellBit[i][j];
+                }
                 else if (aux0 == 'S') {
                     sr = i;
                     sc = j;
                 }
+
                 j++;
             }
             i++;
         }
-
         solve(sr, sc, R, C, A, B, boardMask);
     }
 
