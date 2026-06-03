@@ -10,8 +10,31 @@
         verificar bit:
             mask & (1 << pos_a_verificar)
 
-    Complejidad:
-        O()
+    Complejidades:
+        
+        rotateMask()
+            Esta funcion es constante ya que son solo asignaciones asi mismo como las funciones de
+            las que hace uso. O(1)
+        
+        encodeState1()
+            Esta funcion es constante O(1)
+        
+        pairHash()
+            Esta funcion es constante O(1)
+        
+        hasGold() y faceHasGold()
+            Estas funciones son constantes O(1)
+
+        solve()
+            Esta funcion tiene una complejidad de O(R * C * 64 * 2^6 * log(R * C * 64 * 2^6))
+            donde R son las filas, C son las columnas, el 64 son las posiciones del tablero 8x8 (En el peor caso)
+            y el 2^6 es de las combinaciones posibles del dado cuando tiene oro o no.
+        
+        main()
+            Esta funcion tiene un init a cellbit el cual tiene una complejidad de O(N^2)
+
+        Complejidad final:
+            O(R * C * 64 * 2^6 * log(R * C * 64 * 2^6))
 */
 
 #include <bits/stdc++.h>
