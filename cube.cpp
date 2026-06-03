@@ -20,13 +20,11 @@ using namespace std;
 const int DR[] = {0, 1, 0, -1};
 const int DC[] = {1, 0, -1, 0};
 
-// Direcciones usadas en DR/DC
 const int EAST_DIR = 0;
 const int SOUTH_DIR = 1;
 const int WEST_DIR = 2;
 const int NORTH_DIR = 3;
 
-// Posiciones relativas de las caras del cubo
 const int DOWN = 0;
 const int SOUTH = 1;
 const int EAST = 2;
@@ -230,6 +228,7 @@ int main() {
             }
             i++;
         }
+        
         solve(sr, sc, R, C, A, B, boardMask);
     }
 
