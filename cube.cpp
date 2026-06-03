@@ -21,18 +21,18 @@ const int DR[] = {0, 1, 0, -1};
 const int DC[] = {1, 0, -1, 0};
 
 // Direcciones usadas en DR/DC
-const int EAST_DIR  = 0;
+const int EAST_DIR = 0;
 const int SOUTH_DIR = 1;
-const int WEST_DIR  = 2;
+const int WEST_DIR = 2;
 const int NORTH_DIR = 3;
 
 // Posiciones relativas de las caras del cubo
-const int DOWN  = 0;
+const int DOWN = 0;
 const int SOUTH = 1;
-const int EAST  = 2;
+const int EAST = 2;
 const int NORTH = 3;
-const int WEST  = 4;
-const int UP    = 5;
+const int WEST = 4;
+const int UP = 5;
 
 uint64_t cellBit[8][8];
 
@@ -53,25 +53,25 @@ int rotateMask(int mask, int d) {
     if (d == EAST_DIR) {
         setBit(nm, DOWN, bit(mask, WEST));
         setBit(nm, EAST, bit(mask, DOWN));
-        setBit(nm, UP,   bit(mask, EAST));
+        setBit(nm, UP, bit(mask, EAST));
         setBit(nm, WEST, bit(mask, UP));
     }
     else if (d == WEST_DIR) {
         setBit(nm, DOWN, bit(mask, EAST));
         setBit(nm, WEST, bit(mask, DOWN));
-        setBit(nm, UP,   bit(mask, WEST));
+        setBit(nm, UP, bit(mask, WEST));
         setBit(nm, EAST, bit(mask, UP));
     }
     else if (d == SOUTH_DIR) {
-        setBit(nm, DOWN,  bit(mask, NORTH));
+        setBit(nm, DOWN, bit(mask, NORTH));
         setBit(nm, SOUTH, bit(mask, DOWN));
-        setBit(nm, UP,    bit(mask, SOUTH));
+        setBit(nm, UP, bit(mask, SOUTH));
         setBit(nm, NORTH, bit(mask, UP));
     }
     else {
-        setBit(nm, DOWN,  bit(mask, SOUTH));
+        setBit(nm, DOWN, bit(mask, SOUTH));
         setBit(nm, NORTH, bit(mask, DOWN));
-        setBit(nm, UP,    bit(mask, NORTH));
+        setBit(nm, UP, bit(mask, NORTH));
         setBit(nm, SOUTH, bit(mask, UP));
     }
 
@@ -124,10 +124,6 @@ void solve(int sr, int sc, int R, int C, int A, int B, uint64_t initialBoardMask
         Estado claveActual = make_pair(estado1, boardMask);
         unordered_map<Estado, int, PairHash>::iterator itActual = dist.find(claveActual);
 
-        if (itActual == dist.end() || itActual->second < cost) {
-            continue;
-        }
-
         int er = estado1 & 7;
         int ec = (estado1 >> 3) & 7;
         int goldFaces = (estado1 >> 6) & 63;
@@ -136,7 +132,6 @@ void solve(int sr, int sc, int R, int C, int A, int B, uint64_t initialBoardMask
             found = true;
             ans = cost;
         }
-
 
         if (!found && itActual->second == cost) 
         {
